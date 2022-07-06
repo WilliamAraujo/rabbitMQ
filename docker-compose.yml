@@ -1,0 +1,60 @@
+version: '3'
+
+services:
+
+  consumer:
+    build: 
+      context: ./consumer
+      dockerfile: Dockerfile
+    command: python consumer.py
+    container_name: 'consumer'
+    networks:
+      - rabbitmq_network
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    image: 'rabbitmq:3-management'
+    domainname: rabbitmq.com
+    # hostname: 'my-rabbit'
+    ports:
+      - '25676:25676'
+      - '15672:15672'
+      - '5672:5672'
+    environment:
+      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_PASSWORD=homesecurity
+      - RABBITMQ_USERNAME=Home@security7
+    networks:
+      - rabbitmq_network
+
+networks:
+  rabbitmq_network:
+    driver: bridge
+
+
+  # service_a:
+  #   build: 
+  #     context: ./servicesA
+  #     dockerfile: Dockerfile
+  #   command: python serviceA.py
+  #   # restart: 'always'
+  #   container_name: 'serviceA'
+  #   networks:
+  #     - myNetwork
+  #   depends_on:
+  #     - consumer
+
+  # service_b:
+  #   build: 
+  #     context: ./servicesB
+  #     dockerfile: Dockerfile
+  #   command: python serviceB.py
+  #   # restart: 'always'
+  #   container_name: 'serviceB'
+  #   network_mode: "host"
+  #   networks:
+  #     - myNetwork
+  #   depends_on:
+  #     - consumer
