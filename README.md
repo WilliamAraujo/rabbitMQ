@@ -1,0 +1,2 @@
+# rabbitMQ
+Scripts for RabbitMQ
