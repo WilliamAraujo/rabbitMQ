@@ -6,17 +6,23 @@ services:
     build: 
       context: ./consumer
       dockerfile: Dockerfile
-    command: python consumer.py
+    # command: python consumer.py
     container_name: 'consumer'
+    hostname: 'consumer'
+    # network_mode: "host"
     networks:
-      - rabbitmq_network
+      lan:
+        # Define a static ip for the container. The containter can be accessible by others devices on the LAN network with this IP.
+        ipv4_address: 127.0.0.3
     depends_on:
       - rabbitmq
 
   rabbitmq:
-    image: 'rabbitmq:3-management'
-    domainname: rabbitmq.com
-    # hostname: 'my-rabbit'
+    build: 
+      context: ./rabbitmq
+      dockerfile: Dockerfile
+    container_name: rabbitmq
+    hostname: 'rabbitmq'
     ports:
       - '25676:25676'
       - '15672:15672'
@@ -26,13 +32,26 @@ services:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_PASSWORD=homesecurity
       - RABBITMQ_USERNAME=Home@security7
+    # network_mode: host
     networks:
-      - rabbitmq_network
+      lan:
+        # Define a static ip for the container. The containter can be accessible by others devices on the LAN network with this IP.
+        ipv4_address: 127.0.0.2
 
 networks:
-  rabbitmq_network:
-    driver: bridge
+  lan:
+    name: lan
+    driver: macvlan
+    driver_opts:
+      parent: lo #your ethernet interface
+    ipam:
+      config:
+        - subnet: 127.0.0.1/8
 
+# networks:
+#   rabbitmq_network:
+#     name: rabbitmq_network
+#     driver: bridge
 
   # service_a:
   #   build: 

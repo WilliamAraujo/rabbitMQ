@@ -10,4 +10,4 @@ COPY .  .
 RUN apt update
 
 # # Install packages
-RUN apt install -y iputils-ping net-tools
+RUN apt install -y iputils-ping net-tools nano
