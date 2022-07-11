@@ -2,20 +2,47 @@ version: '3'
 
 services:
 
+  # service_b:
+  #   build: 
+  #     context: ./servicesB
+  #     dockerfile: Dockerfile
+  #   command: python serviceB.py
+  #   container_name: 'service_b'
+  #   hostname: 'service_b'
+  #   network_mode: "host"
+  #   restart: 'on-failure'
+  #   depends_on:
+  #     - service_a
+
+  service_a:
+    build: 
+      context: ./servicesA
+      dockerfile: Dockerfile
+    command: python serviceA.py
+    container_name: 'service_a'
+    hostname: 'service_a'
+    network_mode: host
+    environment:
+      - HOSTNAMERABBIT=rabbitmq
+    restart: on-failure
+    depends_on:
+      rabbit:
+        condition: service_healthy
+
   consumer:
     build: 
       context: ./consumer
       dockerfile: Dockerfile
-    # command: python consumer.py
+    command: python consumer.py
     container_name: 'consumer'
     hostname: 'consumer'
-    # network_mode: "host"
-    networks:
-      lan:
-        # Define a static ip for the container. The containter can be accessible by others devices on the LAN network with this IP.
-        ipv4_address: 127.0.0.3
+    network_mode: host
+    environment:
+      - HOSTNAMERABBIT=rabbitmq
+    restart: on-failure
     depends_on:
-      - rabbitmq
+      rabbit:
+        condition: service_healthy
 
   rabbitmq:
     build: 
@@ -24,56 +51,25 @@ services:
     container_name: rabbitmq
     hostname: 'rabbitmq'
     ports:
-      - '25676:25676'
-      - '15672:15672'
-      - '5672:5672'
+      - "4369:4369"
+      - "5671:5671"
+      - "5672:5672"
+      - "15671:15671"
+      - "15672:15672"
+      - "25672:25672"
+      - "25676:25676"
+    # Allow access to docker daemon
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock      
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3     
+
     environment:
       - RABBITMQ_DEFAULT_PASS=guest
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_PASSWORD=homesecurity
       - RABBITMQ_USERNAME=Home@security7
-    # network_mode: host
-    networks:
-      lan:
-        # Define a static ip for the container. The containter can be accessible by others devices on the LAN network with this IP.
-        ipv4_address: 127.0.0.2
-
-networks:
-  lan:
-    name: lan
-    driver: macvlan
-    driver_opts:
-      parent: lo #your ethernet interface
-    ipam:
-      config:
-        - subnet: 127.0.0.1/8
-
-# networks:
-#   rabbitmq_network:
-#     name: rabbitmq_network
-#     driver: bridge
-
-  # service_a:
-  #   build: 
-  #     context: ./servicesA
-  #     dockerfile: Dockerfile
-  #   command: python serviceA.py
-  #   # restart: 'always'
-  #   container_name: 'serviceA'
-  #   networks:
-  #     - myNetwork
-  #   depends_on:
-  #     - consumer
-
-  # service_b:
-  #   build: 
-  #     context: ./servicesB
-  #     dockerfile: Dockerfile
-  #   command: python serviceB.py
-  #   # restart: 'always'
-  #   container_name: 'serviceB'
-  #   network_mode: "host"
-  #   networks:
-  #     - myNetwork
-  #   depends_on:
-  #     - consumer
+    network_mode: host

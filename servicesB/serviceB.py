@@ -1,13 +1,23 @@
 #!/usr/bin/env python
 import pika
+import os
 import uuid
 import json
+from time import sleep
 
 
 class RabbitMQRpcClient(object):
 
     def __init__(self):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='eth0'))
+        # Access the CLOUD_AMQP_URL environment variable and parse it (fallback to localhost)
+        url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@172.17.0.1:5672/%2f')
+        print(url)
+        params = pika.URLParameters(url)
+        params.socket_timeout = 10
+        self.connection = pika.BlockingConnection(params)
+        while(self.connection.is_open is False):
+            sleep(5)
+            print("[serviceB] Waiting RabbitMQ connection starting!")         
 
         self.channel = self.connection.channel()
 

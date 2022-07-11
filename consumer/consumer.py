@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from calendar import c
 import pika
 import os
 from time import sleep
@@ -12,25 +13,28 @@ def pdf_process_function(msg):
     return
 
 # Access the CLOUD_AMQP_URL environment variable and parse it (fallback to localhost)
-url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@127.0.0.2:5672/%2f')
+url = os.environ.get('CLOUDAMQP_URL', 'amqp://guest:guest@172.17.0.1:5672/%2f')
 print(url)
 params = pika.URLParameters(url)
 params.socket_timeout = 10
 connection = pika.BlockingConnection(params)
+print("[consumer] RabbitMQ Connected !")
+
+print(connection)
 
 channel = connection.channel()
 
 channel.queue_declare(queue='rpc_queue')
 
-def message_to_send():
-    message = dict(service='service-received', body="Sou o listening")
+def message_to_send(message_received: str):
+    message = dict(service='service-received', body=f"Sou o listening {message_received['count']}")
     return json.dumps(message)
 
 def on_request(ch, method, props, body):
     message_received = json.loads(body)
     print(f" [.] {message_received}")
 
-    response = message_to_send()
+    response = message_to_send(message_received)
     print(f"response: {response}")
 
     ch.basic_publish(exchange='',
