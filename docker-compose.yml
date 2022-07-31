@@ -26,8 +26,9 @@ services:
       - HOSTNAMERABBIT=rabbitmq
     restart: on-failure
     depends_on:
-      rabbit:
-        condition: service_healthy
+      - rabbitmq
+      # rabbit:
+      #   condition: service_healthy
 
   consumer:
     build: 
@@ -41,8 +42,9 @@ services:
       - HOSTNAMERABBIT=rabbitmq
     restart: on-failure
     depends_on:
-      rabbit:
-        condition: service_healthy
+      - rabbitmq
+      # rabbit:
+      #   condition: service_healthy
 
   rabbitmq:
     build: 
